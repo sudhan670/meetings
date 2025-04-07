@@ -63,6 +63,6 @@ group :test do
 end
 gem "devise"
 gem "cancancan"
-gem "bootstrap", '~> 5.1.3'
+gem "bootstrap", '~> 5.3.3'
 gem "jquery-rails"
 gem "simple_form"
