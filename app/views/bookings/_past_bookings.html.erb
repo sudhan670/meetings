@@ -1,0 +1,56 @@
+<% past_bookings = @bookings.past.order(start_time: :desc) %>
+<% if past_bookings.any? %>
+  <div class="table-responsive">
+    <table class="table table-hover">
+      <thead>
+        <tr>
+          <th>Room</th>
+          <th>Date</th>
+          <th>Time</th>
+          <th>Duration</th>
+          <th>Participants</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% past_bookings.each do |booking| %>
+          <tr>
+            <td><%= booking.room.name %></td>
+            <td><%= booking.start_time.strftime("%B %d, %Y") %></td>
+            <td>
+              <%= booking.start_time.strftime("%I:%M %p") %> - 
+              <%= booking.end_time.strftime("%I:%M %p") %>
+            </td>
+            <td><%= booking.duration_in_hours %> hours</td>
+            <td>
+              <% booking.meeting_participants.each do |participant| %>
+                <span class="badge bg-secondary me-1">
+                  <%= participant.user.name %>
+                </span>
+              <% end %>
+            </td>
+            <td>
+              <span class="badge bg-<%= 
+                booking.status == 'confirmed' ? 'success' : 
+                (booking.status == 'canceled' ? 'danger' : 'warning') 
+              %>">
+                <%= booking.status.capitalize %>
+              </span>
+            </td>
+            <td>
+              <%= link_to booking_path(booking), class: "btn btn-info btn-sm" do %>
+                <i class="bi bi-eye"></i> View
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% else %>
+  <div class="alert alert-info text-center">
+    <i class="bi bi-calendar-x me-2"></i>
+    No past bookings found.
+  </div>
+<% end %>

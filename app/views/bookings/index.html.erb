@@ -1,0 +1,186 @@
+<div class="container">
+  <h1>My Bookings</h1>
+
+  <ul class="nav nav-tabs mb-4">
+    <li class="nav-item">
+      <a class="nav-link active" data-bs-toggle="tab" href="#upcoming">Upcoming</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" data-bs-toggle="tab" href="#past">Past</a>
+    </li>
+    <% if current_user.meeting_participants.pending.any? %>
+      <li class="nav-item">
+        <a class="nav-link" data-bs-toggle="tab" href="#invitations">
+          Pending Invitations <span class="badge bg-warning"><%= current_user.meeting_participants.pending.count %></span>
+        </a>
+      </li>
+    <% end %>
+  </ul>
+
+  <div class="tab-content">
+  <div class="tab-pane fade" id="invitations" role="tabpanel">
+  <% @invitations = current_user.meeting_participants.pending.includes(booking: [:room, :user]).order('bookings.start_time') %>
+  <% if @invitations.any? %>
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>Room</th>
+          <th>Date</th>
+          <th>Time</th>
+          <th>Organizer</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @invitations.each do |invitation| %>
+          <% booking = invitation.booking %>
+          <tr>
+            <td><%= booking.room.name %></td>
+            <td><%= booking.start_time.to_date %></td>
+            <td><%= booking.start_time.strftime("%H:%M") %> - <%= booking.end_time.strftime("%H:%M") %></td>
+            <td><%= booking.user.name %> (<%= booking.user.position %>)</td>
+            <td>
+              <%= form_with(
+                model: invitation, 
+                url: meeting_participant_path(invitation), 
+                method: :patch, 
+                local: true, 
+                class: "d-inline me-2"
+              ) do |form| %>
+                <%= form.hidden_field :status, value: 'accepted' %>
+                <%= form.submit "Accept", class: "btn btn-success btn-sm" %>
+              <% end %>
+              
+              <%= form_with(
+                model: invitation, 
+                url: meeting_participant_path(invitation), 
+                method: :patch, 
+                local: true, 
+                class: "d-inline"
+              ) do |form| %>
+                <%= form.hidden_field :status, value: 'rejected' %>
+                <%= form.submit "Reject", class: "btn btn-danger btn-sm" %>
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  <% else %>
+    <div class="alert alert-info">
+      You have no pending invitations.
+    </div>
+  <% end %>
+</div>
+</div>
+    <div class="tab-pane fade show active" id="upcoming">
+      <% upcoming_bookings = @bookings.upcoming.order(start_time: :asc) %>
+      <% if upcoming_bookings.any? %>
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th>Room</th>
+              <th>Date</th>
+              <th>Time</th>
+              <th>Duration</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% upcoming_bookings.each do |booking| %>
+              <tr>
+                <td><%= booking.room.name %></td>
+                <td><%= booking.start_time.to_date %></td>
+                <td><%= booking.start_time.strftime("%H:%M") %> - <%= booking.end_time.strftime("%H:%M") %></td>
+                
+                <td>
+                  <span class="badge bg-<%= 
+                    booking.status == 'confirmed' ? 'success' : 
+                    (booking.status == 'canceled' ? 'danger' : 'warning') 
+                  %>">
+                    <%= booking.status %>
+                  </span>
+                </td>
+                <td>
+                  <%= link_to "View", booking_path(booking), class: "btn btn-info btn-sm" %>
+                  <% if booking.can_cancel? %>
+                    <%= link_to "Cancel", booking_path(booking), 
+                        method: :delete, 
+                        data: { confirm: "Are you sure you want to cancel this booking?" }, 
+                        class: "btn btn-danger btn-sm ms-2" %>
+                  <% end %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      <% else %>
+        <div class="alert alert-info">
+          You have no upcoming bookings.
+        </div>
+      <% end %>
+    </div>
+    
+    <div class="tab-pane fade" id="past">
+      <% past_bookings = @bookings.past.order(start_time: :desc) %>
+      <% if past_bookings.any? %>
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th>Room</th>
+              <th>Date</th>
+              <th>Time</th>
+              <th>Duration</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% past_bookings.each do |booking| %>
+              <tr>
+                <td><%= booking.room.name %></td>
+                <td><%= booking.start_time.to_date %></td>
+                <td><%= booking.start_time.strftime("%H:%M") %> - <%= booking.end_time.strftime("%H:%M") %></td>
+                
+                <td>
+                  <span class="badge bg-<%= 
+                    booking.status == 'confirmed' ? 'success' : 
+                    (booking.status == 'canceled' ? 'danger' : 'warning') 
+                  %>">
+                    <%= booking.status %>
+                  </span>
+                </td>
+                <td>
+                  <%= link_to "View", booking_path(booking), class: "btn btn-info btn-sm" %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      <% else %>
+        <div class="alert alert-info">
+          You have no past bookings.
+        </div>
+      <% end %>
+    </div>
+    
+  
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  var tabLinks = document.querySelectorAll('.nav-link[data-bs-toggle="tab"]');
+  tabLinks.forEach(function(tab) {
+    tab.addEventListener('click', function(event) {
+      var targetTab = document.querySelector(this.getAttribute('href'));
+      if (targetTab) {
+        document.querySelectorAll('.tab-pane').forEach(function(pane) {
+          pane.classList.remove('show', 'active');
+        });
+        targetTab.classList.add('show', 'active');
+      }
+    });
+  });
+});
+</script>

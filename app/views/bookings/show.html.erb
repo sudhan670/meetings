@@ -1,0 +1,48 @@
+<div class="container">
+  <h1>Booking Details</h1>
+
+  <div class="row">
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Booking Information</h5>
+          <p><strong>Room:</strong> <%= @booking.room.name %></p>
+          <p><strong>Date:</strong> <%= @booking.start_time.to_date %></p>
+          <p><strong>Time:</strong> <%= @booking.start_time.strftime("%H:%M") %> - <%= @booking.end_time.strftime("%H:%M") %></p>
+          
+          <p><strong>Status:</strong>
+            <span class="badge bg-<%= @booking.status == 'confirmed' ? 'success' : (@booking.status == 'canceled' ? 'danger' : 'warning') %>">
+              <%= @booking.status %>
+            </span>
+          </p>
+          <p><strong>Organizer:</strong> <%= @booking.user.name %></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header">
+          Participants
+        </div>
+        <ul class="list-group list-group-flush">
+          <% @meeting_participants.each do |participant| %>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              <%= participant.user.name %> 
+              <span class="badge bg-<%= 
+                participant.status == 'accepted' ? 'success' : 
+                (participant.status == 'rejected' ? 'danger' : 'warning') 
+              %>">
+                <%= participant.status.capitalize %>
+              </span>
+            </li>
+          <% end %>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="mt-3">
+    <%= link_to "Back to Room", room_path(@room), class: "btn btn-warning" %>
+  </div>
+</div>

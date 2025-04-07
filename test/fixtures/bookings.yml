@@ -1,0 +1,15 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  room: one
+  user: one
+  start_time: 2025-03-26 10:24:41
+  end_time: 2025-03-26 10:24:41
+  status: MyString
+
+two:
+  room: two
+  user: two
+  start_time: 2025-03-26 10:24:41
+  end_time: 2025-03-26 10:24:41
+  status: MyString

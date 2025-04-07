@@ -1,0 +1,65 @@
+<% @invitations = current_user.meeting_participants.pending.includes(booking: [:room, :user]).order('bookings.start_time') %>
+<% if @invitations.any? %>
+  <div class="table-responsive">
+    <table class="table table-hover">
+      <thead>
+        <tr>
+          <th>Room</th>
+          <th>Date</th>
+          <th>Time</th>
+          <th>Organizer</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @invitations.each do |invitation| %>
+          <% booking = invitation.booking %>
+          <tr>
+            <td><%= booking.room.name %></td>
+            <td><%= booking.start_time.strftime("%B %d, %Y") %></td>
+            <td>
+              <%= booking.start_time.strftime("%I:%M %p") %> - 
+              <%= booking.end_time.strftime("%I:%M %p") %>
+            </td>
+            <td>
+              <%= booking.user.name %> 
+              <small class="text-muted">(<%= booking.user.position %>)</small>
+            </td>
+            <td>
+              <%= form_with(
+                model: invitation, 
+                url: meeting_participant_path(invitation), 
+                method: :patch, 
+                local: true, 
+                class: "d-inline me-2"
+              ) do |form| %>
+                <%= form.hidden_field :status, value: 'accepted' %>
+                <%= form.submit "Accept", class: "btn btn-success btn-sm" do %>
+                  <i class="bi bi-check-circle me-1"></i>Accept
+                <% end %>
+              <% end %>
+              
+              <%= form_with(
+                model: invitation, 
+                url: meeting_participant_path(invitation), 
+                method: :patch, 
+                local: true, 
+                class: "d-inline"
+              ) do |form| %>
+                <%= form.hidden_field :status, value: 'rejected' %>
+                <%= form.submit "Reject", class: "btn btn-danger btn-sm" do %>
+                  <i class="bi bi-x-circle me-1"></i>Reject
+                <% end %>
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% else %>
+  <div class="alert alert-info text-center">
+    <i class="bi bi-inbox me-2"></i>
+    No pending meeting invitations.
+  </div>
+<% end %>

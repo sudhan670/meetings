@@ -1,0 +1,98 @@
+<div class="container">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card">
+        <div class="card-header">
+          <h2 class="mb-0">Create New Booking</h2>
+        </div>
+        
+        <%= form_with(model: @booking, local: true, class: 'card-body') do |form| %>
+          <% if @booking.errors.any? %>
+            <div class="alert alert-danger">
+              <h4><%= pluralize(@booking.errors.count, "error") %> prohibited this booking from being saved:</h4>
+              <ul>
+                <% @booking.errors.full_messages.each do |message| %>
+                  <li><%= message %></li>
+                <% end %>
+              </ul>
+            </div>
+          <% end %>
+
+          <div class="mb-3">
+            <%= form.label :room_id, class: 'form-label' %>
+            <%= form.collection_select :room_id, Room.available, :id, :name, 
+                { prompt: 'Select a Room' }, 
+                { class: 'form-select', required: true } %>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <%= form.label :start_time, class: 'form-label' %>
+              <%= form.datetime_local_field :start_time, 
+                  class: 'form-control', 
+                  required: true, 
+                  min: Time.current.strftime("%Y-%m-%dT%H:%M") %>
+            </div>
+
+            <div class="col-md-6 mb-3">
+              <%= form.label :duration_in_hours, class: 'form-label' %>
+              <%= form.number_field :duration_in_hours, 
+                  class: 'form-control', 
+                  min: 1, 
+                  max: 4, 
+                  required: true,
+                  placeholder: 'Duration (1-4 hours)' %>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <%= form.label :participants, class: 'form-label' %>
+            <%= form.collection_select :participant_ids, 
+                User.where.not(id: current_user.id), 
+                :id, 
+                :name, 
+                { prompt: 'Select Participants' }, 
+                { 
+                  class: 'form-select', 
+                  multiple: true,
+                  data: { 'select2-multiple': true }
+                } 
+            %>
+          </div>
+
+          <div class="mb-3">
+            <%= form.label :description, class: 'form-label' %>
+            <%= form.text_area :description, 
+                class: 'form-control', 
+                rows: 3, 
+                placeholder: 'Optional meeting description' %>
+          </div>
+
+          <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+            <%= link_to bookings_path, class: 'btn btn-secondary me-md-2' do %>
+              <i class="bi bi-x-circle me-1"></i>Cancel
+            <% end %>
+            
+            <%= form.submit 'Create Booking', 
+                class: 'btn btn-primary', 
+                data: { disable_with: 'Creating...' } do %>
+              <i class="bi bi-calendar-plus me-1"></i>Create Booking
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Optional: Use Select2 for multiple participant selection
+    if (typeof $().select2 === 'function') {
+      $('[data-select2-multiple]').select2({
+        placeholder: 'Select participants',
+        allowClear: true
+      });
+    }
+  });
+</script>

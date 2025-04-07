@@ -1,0 +1,177 @@
+<h1>Admin Dashboard</h1>
+
+<div class="row mb-4">
+  <div class="col-md-4">
+    <div class="card text-white bg-primary">
+      <div class="card-body">
+        <h5 class="card-title">Total Rooms</h5>
+        <h2 class="card-text"><%= @rooms.count %></h2>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card text-white bg-success">
+      <div class="card-body">
+        <h5 class="card-title">Today's Bookings</h5>
+        <h2 class="card-text"><%= @today_bookings.count %></h2>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card text-white bg-info">
+      <div class="card-body">
+        <h5 class="card-title">Total Employees</h5>
+        <h2 class="card-text"><%= @users.count %></h2>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-md-6">
+    <div class="card mb-4">
+      <div class="card-header">
+        <h5>Meeting Rooms</h5>
+      </div>
+      <div class="card-body">
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Capacity</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @rooms.each do |room| %>
+              <tr>
+                <td><%= room.name %></td>
+                <td><%= room.capacity %></td>
+                <td>
+                  <%= link_to "View", room_path(room), class: "btn btn-info btn-sm" %>
+                  <%= link_to "Edit", edit_room_path(room), class: "btn btn-warning btn-sm" %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+        <%= link_to "Add New Room", new_room_path, class: "btn btn-primary" %>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-6">
+    <div class="card mb-4">
+      <div class="card-header">
+        <h5>Today's Meetings</h5>
+      </div>
+      <div class="card-body">
+        <% if @today_bookings.any? %>
+          <table class="table table-striped">
+            <thead>
+              <tr>
+                <th>Room</th>
+                <th>Time</th>
+                <th>Organizer</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @today_bookings.order(start_time: :asc).each do |booking| %>
+                <tr>
+                  <td><%= booking.room.name %></td>
+                  <td><%= booking.start_time.strftime("%H:%M") %> - <%= booking.end_time.strftime("%H:%M") %></td>
+                  <td><%= booking.user.name %></td>
+                  <td>
+                    <span class="badge bg-<%= booking.status == 'confirmed' ? 'success' : (booking.status == 'canceled' ? 'danger' : 'warning') %>">
+                      <%= booking.status %>
+                    </span>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        <% else %>
+          <p>No meetings scheduled for today.</p>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <h5>Employee Daily Booking Usage</h5>
+  </div>
+  <div class="card-body">
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Position</th>
+          <th>Today's Booking Hours</th>
+          <th>Remaining Hours</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @users.each do |user| %>
+          <% today_hours = user.daily_booking_hours(Date.today) %>
+          <% remaining_hours = [2 - today_hours, 0].max %>
+          <tr>
+            <td><%= user.name %></td>
+            <td><%= user.position %></td>
+            <td><%= today_hours %> hours</td>
+            <td>
+              <div class="progress">
+                <div class="progress-bar bg-success" role="progressbar" style="width: <%= remaining_hours * 50 %>%">
+                  <%= remaining_hours %> hours
+                </div>
+              </div>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+  <div class="row">
+    <div class="col-md-12">
+      <h2>Pending Meeting Invitations</h2>
+      
+      <% @pending_invitations = MeetingParticipant.includes(booking: [:room, :user]).pending.order('bookings.start_time') %>
+      
+      <% if @pending_invitations.any? %>
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th>Invited User</th>
+              <th>Room</th>
+              <th>Date</th>
+              <th>Time</th>
+              <th>Organizer</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @pending_invitations.each do |invitation| %>
+              <% booking = invitation.booking %>
+              <tr>
+                <td><%= invitation.user.name %></td>
+                <td><%= booking.room.name %></td>
+                <td><%= booking.start_time.to_date %></td>
+                <td><%= booking.start_time.strftime("%H:%M") %> - <%= booking.end_time.strftime("%H:%M") %></td>
+                <td><%= booking.user.name %> (<%= booking.user.position %>)</td>
+                <td>
+                  <span class="badge bg-warning">Pending</span>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      <% else %>
+        <div class="alert alert-info">
+          No pending meeting invitations.
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>
