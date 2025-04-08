@@ -1,34 +1,26 @@
 class MeetingParticipantsController < ApplicationController
   before_action :authenticate_user!
   before_action :set_meeting_participant
+  scope :pending, -> { where(status: 'pending') }
 
   def update
-    respond_to do |format|
+    if @meeting_participant.can_respond?
       if @meeting_participant.update(meeting_participant_params)
-        format.html { 
-          redirect_to bookings_path, 
-          notice: "Invitation #{@meeting_participant.status} successfully." 
-        }
-        format.json { render :show, status: :ok }
+        redirect_to bookings_path, notice: 'Meeting response updated successfully.'
       else
-        format.html { 
-          redirect_to bookings_path, 
-          alert: 'Unable to update invitation status.' 
-        }
-        format.json { 
-          render json: @meeting_participant.errors, 
-          status: :unprocessable_entity 
-        }
+        redirect_to bookings_path, alert: 'Failed to update response.'
       end
+    else
+      redirect_to bookings_path, alert: 'Cannot respond to this meeting anymore.'
     end
   end
-
+  
   private
-
+  
   def set_meeting_participant
-    @meeting_participant = current_user.meeting_participants.pending.find(params[:id])
+    @meeting_participant = current_user.meeting_participants.find(params[:id])
   end
-
+  
   def meeting_participant_params
     params.require(:meeting_participant).permit(:status)
   end

@@ -42,17 +42,9 @@ class RoomsController < ApplicationController
   private
   
   def set_room
-    if params[:room_id].present?
-      @room = Room.find_by(id: params[:room_id])
-    elsif params[:booking_id].present?
-      @booking = Booking.find_by(id: params[:booking_id]) # Define @booking properly
-      @room = @booking&.room # Use safe navigation operator to prevent nil error
-    else
-      @room = nil
-    end
-  
-    redirect_to rooms_path, alert: "Room not found" if @room.nil?
+    @room = Room.find(params[:id])
   end
+  
   def room_params
     params.require(:room).permit(:name, :capacity, :description)
   end
