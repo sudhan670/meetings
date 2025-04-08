@@ -84,7 +84,7 @@
                   <td><%= booking.user.name %></td>
                   <td>
                     <span class="badge bg-<%= booking.status == 'confirmed' ? 'success' : (booking.status == 'canceled' ? 'danger' : 'warning') %>">
-                      <%= booking.status.capitalize %>
+                      <%= booking.status %>
                     </span>
                   </td>
                 </tr>
@@ -132,5 +132,46 @@
         <% end %>
       </tbody>
     </table>
+  </div>
+  <div class="row">
+    <div class="col-md-12">
+      <h2>Pending Meeting Invitations</h2>
+      
+      <% @pending_invitations = MeetingParticipant.includes(booking: [:room, :user]).pending.order('bookings.start_time') %>
+      
+      <% if @pending_invitations.any? %>
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th>Invited User</th>
+              <th>Room</th>
+              <th>Date</th>
+              <th>Time</th>
+              <th>Organizer</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @pending_invitations.each do |invitation| %>
+              <% booking = invitation.booking %>
+              <tr>
+                <td><%= invitation.user.name %></td>
+                <td><%= booking.room.name %></td>
+                <td><%= booking.start_time.to_date %></td>
+                <td><%= booking.start_time.strftime("%H:%M") %> - <%= booking.end_time.strftime("%H:%M") %></td>
+                <td><%= booking.user.name %> (<%= booking.user.position %>)</td>
+                <td>
+                  <span class="badge bg-warning">Pending</span>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      <% else %>
+        <div class="alert alert-info">
+          No pending meeting invitations.
+        </div>
+      <% end %>
+    </div>
   </div>
 </div>

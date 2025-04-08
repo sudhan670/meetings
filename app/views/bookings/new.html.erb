@@ -1,98 +1,67 @@
-<div class="container">
-  <div class="row justify-content-center">
-    <div class="col-md-8">
-      <div class="card">
-        <div class="card-header">
-          <h2 class="mb-0">Create New Booking</h2>
+<h1>Book <%= @room.name %></h1>
+
+<div class="row">
+  <div class="col-md-8">
+    <%= form_with(model: [@room, @booking], local: true) do |form| %>
+      <% if @booking.errors.any? %>
+        <div class="alert alert-danger">
+          <h2><%= pluralize(@booking.errors.count, "error") %> prohibited this booking from being saved:</h2>
+          <ul>
+            <% @booking.errors.full_messages.each do |message| %>
+              <li><%= message %></li>
+            <% end %>
+          </ul>
         </div>
-        
-        <%= form_with(model: @booking, local: true, class: 'card-body') do |form| %>
-          <% if @booking.errors.any? %>
-            <div class="alert alert-danger">
-              <h4><%= pluralize(@booking.errors.count, "error") %> prohibited this booking from being saved:</h4>
-              <ul>
-                <% @booking.errors.full_messages.each do |message| %>
-                  <li><%= message %></li>
-                <% end %>
-              </ul>
-            </div>
-          <% end %>
+      <% end %>
 
-          <div class="mb-3">
-            <%= form.label :room_id, class: 'form-label' %>
-            <%= form.collection_select :room_id, Room.available, :id, :name, 
-                { prompt: 'Select a Room' }, 
-                { class: 'form-select', required: true } %>
-          </div>
+      <%= form.hidden_field :room_id, value: @room.id %>
 
-          <div class="row">
-            <div class="col-md-6 mb-3">
-              <%= form.label :start_time, class: 'form-label' %>
-              <%= form.datetime_local_field :start_time, 
-                  class: 'form-control', 
-                  required: true, 
-                  min: Time.current.strftime("%Y-%m-%dT%H:%M") %>
-            </div>
+      <div class="form-group mb-3">
+        <%= form.label :start_time %>
+        <%= form.datetime_local_field :start_time, class: "form-control" %>
+        <small class="text-muted">Bookings must start at the hour or half-hour</small>
+      </div>
 
-            <div class="col-md-6 mb-3">
-              <%= form.label :duration_in_hours, class: 'form-label' %>
-              <%= form.number_field :duration_in_hours, 
-                  class: 'form-control', 
-                  min: 1, 
-                  max: 4, 
-                  required: true,
-                  placeholder: 'Duration (1-4 hours)' %>
-            </div>
-          </div>
+      <div class="form-group mb-3">
+        <%= form.label :end_time %>
+        <%= form.datetime_local_field :end_time, class: "form-control" %>
+        <small class="text-muted">Bookings must end at the hour or half-hour</small>
+      </div>
 
-          <div class="mb-3">
-            <%= form.label :participants, class: 'form-label' %>
-            <%= form.collection_select :participant_ids, 
-                User.where.not(id: current_user.id), 
-                :id, 
-                :name, 
-                { prompt: 'Select Participants' }, 
-                { 
-                  class: 'form-select', 
-                  multiple: true,
-                  data: { 'select2-multiple': true }
-                } 
-            %>
-          </div>
-
-          <div class="mb-3">
-            <%= form.label :description, class: 'form-label' %>
-            <%= form.text_area :description, 
-                class: 'form-control', 
-                rows: 3, 
-                placeholder: 'Optional meeting description' %>
-          </div>
-
-          <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-            <%= link_to bookings_path, class: 'btn btn-secondary me-md-2' do %>
-              <i class="bi bi-x-circle me-1"></i>Cancel
-            <% end %>
-            
-            <%= form.submit 'Create Booking', 
-                class: 'btn btn-primary', 
-                data: { disable_with: 'Creating...' } do %>
-              <i class="bi bi-calendar-plus me-1"></i>Create Booking
-            <% end %>
+      <div class="form-group mb-3">
+        <label>Invite Participants</label>
+        <% User.where(role: 'employee').where.not(id: current_user.id).each do |user| %>
+          <div class="form-check">
+            <%= check_box_tag "participant_ids[]", user.id, false, id: "participant_#{user.id}", class: "form-check-input" %>
+            <%= label_tag "participant_#{user.id}", "#{user.name} (#{user.position})", class: "form-check-label" %>
           </div>
         <% end %>
+      </div>
+
+      <div class="alert alert-info">
+        <p>Remember:</p>
+        <ul>
+          <li>You can book a maximum of 2 hours per day</li>
+          <li>Bookings are on a first-come, first-served basis</li>
+          <li>You can cancel bookings before the start time</li>
+        </ul>
+      </div>
+
+      <div class="actions">
+        <%= form.submit "Book Room", class: "btn btn-primary" %>
+        <%= link_to "Cancel", room_path(@room), class: "btn btn-secondary" %>
+      </div>
+    <% end %>
+  </div>
+
+  <div class="col-md-4">
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title">Room Details</h5>
+        <p><strong>Name:</strong> <%= @room.name %></p>
+        <p><strong>Capacity:</strong> <%= @room.capacity %> people</p>
+        <p><strong>Description:</strong> <%= @room.description %></p>
       </div>
     </div>
   </div>
 </div>
-
-<script>
-  document.addEventListener('DOMContentLoaded', function() {
-    // Optional: Use Select2 for multiple participant selection
-    if (typeof $().select2 === 'function') {
-      $('[data-select2-multiple]').select2({
-        placeholder: 'Select participants',
-        allowClear: true
-      });
-    }
-  });
-</script>

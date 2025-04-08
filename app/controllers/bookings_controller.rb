@@ -7,7 +7,10 @@ class BookingsController < ApplicationController
   end
   
   def show
+    @booking = Booking.find(params[:id])
+    @meeting_participants = @booking.participants.includes(:user) # or just @booking.participants if already users
   end
+  
   
   def new
     @booking = Booking.new
